@@ -7,13 +7,28 @@ const BrowserWindow = electron.BrowserWindow
 const path = require('path')
 const url = require('url')
 
+const fs = require('fs')
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
+const posFileName = 'pos.txt'
+
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600})
+  let options
+  try {
+    fs.accessSync(posFileName)
+    options = JSON.parse(fs.readFileSync(posFileName))
+  } catch (e) {
+    options = {width: 800, height: 600}
+  }
+
+  console.log(options)
+
+  mainWindow = new BrowserWindow(options)
+
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
@@ -23,7 +38,11 @@ function createWindow () {
   }))
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
+
+  mainWindow.on('close', function () {
+    fs.writeFileSync(posFileName, JSON.stringify(mainWindow.getBounds()))
+  })
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
